@@ -44,6 +44,9 @@ parser.add_argument('--target_dir',
 parser.add_argument('--output_dir',
                     type = str, help = "where to save the csv",
                     required = True, dest = "output_dir")
+parser.add_argument('--findext',
+                    type = str,
+                    required = False, dest = "findext")
 args = vars(parser.parse_args())
 
 for c in classes:
@@ -53,7 +56,11 @@ f = []
 for path, subdirs, files in os.walk(args["target_dir"]):
     for name in files:
         f.append(os.path.join(path, name))
-f = [file for file in f if ".csv" in file]
+
+if args["findext"] != None:
+    f = [file for file in f if args["findext"] in file]
+else:
+    f = [file for file in f if ".csv" in file]
 
 df = pd.DataFrame()
 index_levels = ["taxid", "season", "taxclass"]
@@ -93,7 +100,10 @@ with open(os.path.join(args["output_dir"], f"file_index_{outfilename}.csv"), "w+
         curr = row.current
         scen = row.scenario
         hist = row.historic
-        ofname = f"Seasonality.{row.season}-{row.taxid}.csv"
+        if args["findext"] != None:
+            ofname = f"Seasonality.{row.season}-{row.taxid}{args['findext']}"
+        else:
+            ofname = f"Seasonality.{row.season}-{row.taxid}.csv"
         of = os.path.join(args["output_dir"], row.taxclass, ofname)
         out_file.write(f"{curr},{scen},{hist},{of}")
         out_file.write("\n")
