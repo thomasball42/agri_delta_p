@@ -19,7 +19,6 @@ import argparse
 import os
 import warnings
 import rasterio
-from rasterio.transform import Affine
 
 quiet = True
 overwrite = True
@@ -63,9 +62,10 @@ def harmonise(rasters):
     arrays = [np.zeros((height, width), dtype=np.float64) for _ in range(len(rasters))]
     offsets_x = []
     offsets_y = []
-    bounds = rasterio.coords.BoundingBox(left=max_extent[0],right=max_extent[2],
-                                         top=max_extent[1],bottom=max_extent[3])
+    bounds = rasterio.coords.BoundingBox(left=max_extent[0],bottom=max_extent[1],
+                                         right=max_extent[2],top=max_extent[3])
     transform = rasterio.transform.from_bounds(*bounds, width, height)
+    window = rasterio.windows.from_bounds(*bounds, transform=transform)
     for extent in extents:
         offset_x = abs(round((extent.left - max_extent[0]) / raster.res[0]))
         offset_y = abs(round((extent.bottom - max_extent[1]) / raster.res[1]))
@@ -73,7 +73,7 @@ def harmonise(rasters):
         offsets_y.append(offset_y)
     for i, data in enumerate(data_list):
         arrays[i][offsets_y[i]:offsets_y[i]+data.shape[0], offsets_x[i]:offsets_x[i]+data.shape[1]] = data
-    return arrays, transform, shape, crs
+    return arrays, transform, shape, crs, window
 
 def global_p_calc(current_AOH,historic_AOH, exponent):
     sp_P = (current_AOH / historic_AOH)**exponent
@@ -86,20 +86,20 @@ def sillygoofyrenamingfunction(fname):
 if not overwrite and os.path.isfile(args['output_path']):
     quit(f"{args['output_path']} exists, set overwrite to False to ignore this.")
    
-try:
-    current_ds = rasterio.open(args["current_path"])
-except FileNotFoundError:
+if os.path.isfile(args["current_path"]) == False:
     if quiet:
         quit()
     else:
         quit("Current AOH file {args['current_path']} not found, aborting.")
-try:
-    scenario_ds = rasterio.open(args["scenario_path"])
-except FileNotFoundError:
+
+if os.path.isfile(args["scenario_path"]) == False:
     if quiet:
         quit()
     else:
         quit("Scenario AOH file {args['scenario_path']} not found, aborting.")
+
+current_ds = rasterio.open(args["current_path"])
+scenario_ds = rasterio.open(args["scenario_path"])
 
 if args["hist_table"] != None:
     """ This only works with /maps/results/global_analysis/processed/PNV_AOH.csv"""
@@ -125,7 +125,8 @@ else:
 
 seas = os.path.split(args["current_path"])[-1].split("-")[0].split(".")[-1].lower().strip(" ")
 if "resident" in seas:
-    (current_arr, scenario_arr), transform, shape, crs = harmonise([current_ds, scenario_ds])
+    (current_arr, scenario_arr), transform, shape, crs, window = harmonise(
+        [current_ds, scenario_ds])
     current_AOH = current_arr.sum()
     if historic_AOH == 0:
         if quiet:
@@ -133,14 +134,15 @@ if "resident" in seas:
         else:
             quit("Warning: missing historic aoh in csv - skipping species. This is probably due to artificial hab-preference.")
     persistence = global_p_calc(current_AOH,historic_AOH,exponent)
-    new_aoh = current_AOH - current_arr + scenario_arr
+    curr_mask = (current_arr != 0).astype(int)
+    new_aoh = (curr_mask * current_AOH) - current_arr + scenario_arr
     new_p = (new_aoh / historic_AOH) ** exponent
-    deltap = new_p - persistence
+    np_mask = (new_p != 0).astype(int)
+    deltap = new_p - (persistence * np_mask)
     with rasterio.open(
         args["output_path"], "w", driver="GTiff",
-        height = shape[0], width=shape[1], 
-        count=1,  # Number of bands
-        dtype=np.float64,
+        height=shape[0], width=shape[1], 
+        count=1, dtype=np.float64,
         crs=crs, transform=transform,
     ) as dst:
         dst.write(deltap, indexes=1)
@@ -174,19 +176,20 @@ if "nonbreeding" in seas:
     scen_base,scen_fname = os.path.split(args["scenario_path"])
     br_curr_path = os.path.join(curr_base, sillygoofyrenamingfunction(curr_fname))
     br_scen_path = os.path.join(scen_base, sillygoofyrenamingfunction(scen_fname))
-    try:
-        scenario_br_ds = rasterio.open(br_scen_path)
-        current_br_ds = rasterio.open(br_curr_path)
-    except rasterio.errors.RasterioIOError:
+    if os.path.isfile(br_scen_path) == False or os.path.isfile(br_curr_path) == False:
         if quiet:
             quit()
         else:
             taxid = os.path.split(args["current_path"])[-1].split("-")[-1].split(".")[0]
             quit("Warning: Can't find the corresponding breeding range raster for {taxid}, skipping...")
-    (br_curr, nb_curr, br_scen, nb_scen), transform, shape, crs = harmonise(
+    scenario_br_ds = rasterio.open(br_scen_path)
+    current_br_ds = rasterio.open(br_curr_path)
+    (br_curr, nb_curr, br_scen, nb_scen), transform, shape, crs, window = harmonise(
         [current_br_ds, current_nb_ds, scenario_br_ds, scenario_nb_ds])
-    new_aoh_br = br_curr.sum() - br_curr + br_scen
-    new_aoh_nb = nb_curr.sum() - nb_curr + nb_scen
+    
+    new_aoh_br = (br_curr.sum() * (br_curr != 0).astype(int)) - br_curr + br_scen
+    new_aoh_nb = (nb_curr.sum() * (nb_curr != 0).astype(int)) - nb_curr + nb_scen
+
     if historic_AOH_br == 0 or historic_AOH_nb == 0:
         if quiet:
             quit()
@@ -198,7 +201,8 @@ if "nonbreeding" in seas:
     new_p_nb[new_p_nb > 1] = 1 
     new_p = (new_p_br ** 0.5) * (new_p_nb ** 0.5)
     old_p = (((br_curr.sum()/historic_AOH_br)**exponent)**0.5) * (((nb_curr.sum()/historic_AOH_nb)**exponent)**0.5)
-    deltap = new_p - old_p
+    np_mask = (new_p != 0).astype(int)
+    deltap = new_p - (old_p * np_mask) 
     with rasterio.open(
         args["output_path"], "w", driver="GTiff",
         height = shape[0], width=shape[1], 
@@ -206,4 +210,4 @@ if "nonbreeding" in seas:
         dtype=np.float64,
         crs=crs, transform=transform,
     ) as dst:
-        dst.write(deltap, indexes=1)
+        dst.write(deltap, window=window, indexes=1)

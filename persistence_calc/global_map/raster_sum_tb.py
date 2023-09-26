@@ -44,4 +44,4 @@ with rasterio.open(
     crs=crs, transform=transform,
 ) as dst:
     # Write the arrays to the bands
-    dst.write(arr, indexes=1)
+    dst.write(arr,  indexes=1)
