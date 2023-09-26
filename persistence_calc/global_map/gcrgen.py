@@ -46,7 +46,7 @@ parser.add_argument('--output_dir',
                     required = True, dest = "output_dir")
 parser.add_argument('--findext',
                     type = str,
-                    required = False, dest = "findext")
+                    required = True, dest = "findext")
 args = vars(parser.parse_args())
 
 for c in classes:
@@ -90,13 +90,16 @@ if "historic" not in df.columns:
     df["historic"] = "nan"
 
 
-outfilename = splitall(args['target_dir'])[-2]
-
+try:
+    outfilename = splitall(args['target_dir'])[-2]
+except IndexError:
+    outfilename = args["target_dir"]
+    
 with open(os.path.join(args["output_dir"], f"file_index_{outfilename}.csv"), "w+") as out_file:
     out_file.write("--current_path,--scenario_path,--historic_path,--output_path")
     out_file.write("\n")
+    print(f"Writing littlejohn arguments to {os.path.join(args['output_dir'], f'file_index_{outfilename}.csv')}: ", round(i/len(df), 4), end = "\r" )
     for i, (idx, row) in enumerate(df.iterrows()):
-        print(f"Writing littlejohn arguments to {os.path.join(args['output_dir'], f'file_index_{outfilename}.csv')}: ", round(i/len(df), 4), end = "\r" )
         curr = row.current
         scen = row.scenario
         hist = row.historic
