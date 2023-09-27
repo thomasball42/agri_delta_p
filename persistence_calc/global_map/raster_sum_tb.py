@@ -24,7 +24,6 @@ for path, subdirs, files in os.walk(target_dir):
 f = [file for file in f if ".tif" in file]
 f = [file for file in f if "RESIDENT" in file]
 
-
 for fx, file in enumerate(f):
     rast = rasterio.open(file)
     crs = rast.crs
@@ -38,10 +37,8 @@ for fx, file in enumerate(f):
 
 with rasterio.open(
     output_path, "w", driver="GTiff", height=height,
-    width=width, 
-    count=1,  # Number of bands
-    dtype=np.float32,
+    width=width, count=1,
+    dtype=np.float64,
     crs=crs, transform=transform,
 ) as dst:
-    # Write the arrays to the bands
     dst.write(arr,  indexes=1)

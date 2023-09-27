@@ -5,12 +5,14 @@ Created on Wed May 17 15:51:13 2023
 @authors: Thomas Ball, Ali Eyres
 
 This is a modified version of global_code_residents.py that calculates delta p for a set of 
-Rasters. Any resolution should work since it just uses x/y as identifiers.
+Rasters. Any resolution and set of shapes should work, the output raster's extent should
+cover the extents of all inputs.
 
 # AE modified from TB's Code for CSVs
 # Not sure if it works... 
 
-This isn't tidied or commented properly
+This isn't tidied or commented properly. Also doesn't work for historic rasters, you need to
+use the .csv of historic values (probably "/maps/results/global_analysis/processed/PNV_AOH.csv")
 """
 import sys
 import pandas as pd
@@ -137,6 +139,7 @@ if "resident" in seas:
     curr_mask = (current_arr != 0).astype(int)
     new_aoh = (curr_mask * current_AOH) - current_arr + scenario_arr
     new_p = (new_aoh / historic_AOH) ** exponent
+    new_p[new_p > 1] = 1
     np_mask = (new_p != 0).astype(int)
     deltap = new_p - (persistence * np_mask)
     with rasterio.open(

@@ -9,7 +9,7 @@ import geopandas as gpd
 from rasterio.features import rasterize
 from rasterio.transform import from_bounds
 
-data_raster = "inputs/residents_dpsum.tif"
+data_raster = "inputs/deltap_all_species.tif"
 crop_tgt_dir = "inputs/crops/har/"
 anim_tgt_dir = "inputs"
 gh_path = "inputs/gaez_hyde_10k.tif"
@@ -55,9 +55,10 @@ def weighted_mean_err(countries, weight_vals, ds_values):
     for country_id in range(countries.shape[0]):
         country_mask = country_rasts == country_id
         combi_mask = (weight_vals != 0) * country_mask
-        wmasked = weight_vals[combi_mask]
+        wmasked = weight_vals * combi_mask.astype(int)
         wnorm = wmasked / wmasked.sum()
-        dsmasked = ds_values[combi_mask]
+        dsmasked = ds_values * combi_mask.astype(int)
+        # dsmasked = dsmasked / dsmasked.sum()
         weighted_arith_mean = (wnorm * dsmasked).sum() / wnorm.sum()
         arith_stderr = np.var(dsmasked) * np.sqrt((wnorm ** 2).sum())
         arr_means.append(weighted_arith_mean)
@@ -90,8 +91,8 @@ for path, subdirs, files in os.walk(crop_tgt_dir):
         for name in files:
             f.append(os.path.join(path, name))
 f = [x for x in f if ".tif" in x and "aux" not in x]
-for infile in f:
-    print(f"Processing {infile}...")
+for ix, infile in enumerate(f):
+    print(f"Processing {infile}, {ix/len(f)}...")
     fname = os.path.split(infile)[-1]
     cname = fname.split("_")[0]
 
@@ -100,7 +101,7 @@ for infile in f:
     crop_values = rasterio.open(geotiff_file).read(1)
 
     # Calculate mean value within each country
-    mean_values, errs = weighted_mean_err(countries, crop_values, np.divide(ds_values, gh_c))
+    mean_values, errs = weighted_mean_err(countries, crop_values, np.divide(ds_values, c))
     dfx = pd.DataFrame({'Country': countries['ISO_A3'], 'val': mean_values, 'err': errs})
     for row in dfx.iterrows():
         row = row[1]
@@ -108,9 +109,10 @@ for infile in f:
         df.loc[row.Country, f"{cname}_err"] = row.err
 
 ## pasture v2 with livestock dist masks
-for lskey in livestock_paths.keys():
+for lx, lskey in enumrate(livestock_paths.keys()):
+    print(f"Processing {lskey}, {lx/len(livestock_paths.keys())}...")
     ls_data = rasterio.open(livestock_paths[lskey]).read(1)
-    means, errs = weighted_mean_err(countries, ls_data, np.divide(ds_values, gh_p))
+    means, errs = weighted_mean_err(countries, ls_data, np.divide(ds_values, 1))
     dfx = pd.DataFrame({'Country': countries['ISO_A3'], 'val': means, 'err': errs})
     for row in dfx.iterrows():
         row = row[1]
@@ -126,8 +128,8 @@ for row in dfx.iterrows():
     df.loc[row.Country, "crop"] = row.val
     df.loc[row.Country, f"crop_err"] = row.err
 # # Print the result table
-# outfile = os.path.split(crop_tgt_dir)[-1].split(".")[0] + "country_opp_cost" + ".csv"
-# # print(f"Writing output :{os.path.join(output_path, outfile)}")
+outfile = os.path.split(crop_tgt_dir)[-1].split(".")[0] + "country_opp_cost" + ".csv"
+# print(f"Writing output :{os.path.join(output_path, outfile)}")
 print(df)
-# # df.to_csv(os.path.join(output_path, outfile))
+df.to_csv(os.path.join(output_path, outfile))
 
