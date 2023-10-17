@@ -1,7 +1,5 @@
 """
 Thomas Ball, 7th Aug 2023
-
-Use - first sys arg points to the folder with gaez rasters (for each crop. Use 'T', total area)
 """
 
 import rasterio
@@ -9,10 +7,18 @@ import numpy as np
 import sys
 import os
 
-gaez_path = "inputs/GAEZv4/LR/lco/GLCSv11_02_5m.tif"
-hyde_path = "inputs/HYDE3.2/grazing2017AD.asc"
-disaggCutoff = 0.98
+gaez_path = "inputs/GLCSv11_02_5m.tif"
+hyde_path = "inputs/grazing2017AD.asc"
+disaggCutoff = 0.95
 output_path = "rasters/gaez_hyde_/gaez_hyde_10k.tif"
+pnv_path = ""
+
+def pixel_areas(dataset):
+    latitudes = np.linspace(dataset.bounds.bottom, dataset.bounds.top, dataset.height)
+    R = 6371137 # metres
+    y0 = R * np.sin(np.deg2rad(dataset.res[0]))
+    ydist = R * (np.sin(np.deg2rad(abs(latitudes))) - np.sin(np.deg2rad(abs(latitudes) - dataset.res[0])))
+    return ydist * y0
 
 # load stuff and create pixelAreas
 with rasterio.open(gaez_path) as dataset:
@@ -23,11 +29,7 @@ with rasterio.open(gaez_path) as dataset:
     dataset = None
 
 with rasterio.open(hyde_path) as dataset:
-    latitudes = np.linspace(dataset.bounds.bottom, dataset.bounds.top, dataset.height)
-    R = 6371137 
-    y0 = R * np.sin(np.deg2rad(dataset.res[0]))
-    ydist = R * (np.sin(np.deg2rad(abs(latitudes))) - np.sin(np.deg2rad(abs(latitudes) - dataset.res[0])))
-    oneD_pixelAreasM2 = ydist * y0
+    oneD_pixelAreasM2 = pixel_areas(dataset)
     hyde_ = dataset.read(1) # km2
     pixelAreasM2 = np.full(hyde_.shape, 0)
     pixelAreasM2[:,:] = oneD_pixelAreasM2.reshape((oneD_pixelAreasM2.shape[0], 1))

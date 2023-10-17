@@ -82,8 +82,7 @@ def global_p_calc(current_AOH,historic_AOH, exponent):
     sp_P_fix = np.where(sp_P > 1, 1, sp_P)
     return sp_P_fix 
 
-def sillygoofyrenamingfunction(fname):
-        return fname.split(".")[0] + ".BREEDING-" + fname.split("-")[-1]
+sillygoofyrenamingfunction = lambda fname: fname.split(".")[0] + ".BREEDING-" + fname.split("-")[-1]
 
 if not overwrite and os.path.isfile(args['output_path']):
     quit(f"{args['output_path']} exists, set overwrite to False to ignore this.")
