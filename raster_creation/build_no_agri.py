@@ -12,8 +12,7 @@ with rasterio.open(jung_path) as raster:
     transform = raster.transform
     crs = raster.crs
     data = raster.read(1)
-    for rm in rm_list:
-        data[data == rm] = nodat_val
+    data = np.where(np.isin(data, np.array(rm_list)), data, 0)
     raster.close()
     rasters = None
 

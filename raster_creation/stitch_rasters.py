@@ -4,7 +4,7 @@ from rasterio.warp import calculate_default_transform, reproject, Resampling
 import numpy
 import os
 
-target_dir = "rasters/open_past_/past_exc_parts"
+target_dir = "rasters/open_past_/pasture_exc_parts"
 out_path = "rasters/open_past_/pasture_exc_400752_200376.tif"
 
 dst_crs = 'EPSG:4326'
@@ -20,13 +20,13 @@ src_files_to_mosaic = []
 for file in f:
     src = rasterio.open(file)
     src_files_to_mosaic.append(src)
-mosaic, out_trans = merge(src_files_to_mosaic)
+mosaic, transform = merge(src_files_to_mosaic)
 
 out_meta = src.meta.copy()
 out_meta.update({"driver": "GTiff",
                  "height": mosaic.shape[1],
                  "width": mosaic.shape[2],
-                 "transform": out_trans})
+                 "transform": transform})
 
 # with rasterio.open(out_path, 'w', **out_meta) as dest:
 #     reproject(

@@ -8,6 +8,7 @@ ext_past_path = "rasters/open_past_/pasture_exc_400752_200376.tif"
 
 output_path_f_gh = "rasters/current_/noagri_fill_gh_400752_200376.tif"
 output_path_f_pnv = "rasters/restored_/noagri_fill_pnv_400752_200376.tif"
+
 raster_path_list_f_gh = [no_agri_path, ext_past_path, gaez_hyde_path, jung_pnv_path]
 raster_path_list_f_pnv = [no_agri_path, ext_past_path, jung_pnv_path]
 
