@@ -20,9 +20,12 @@ open_ls = [200, # savannah
            800] # desert
 
 chunks = 16
-windows = []
 num_d = 4
-offs = int(sys.argv[1]) - 1
+
+try:
+    offs = int(sys.argv[1]) - 1
+except IndexError:
+    offs = 0
 
 for c in range(int(chunks / num_d)):
     c = c + (num_d*offs)
@@ -32,9 +35,7 @@ for c in range(int(chunks / num_d)):
         chunk_width = width / chunks
         chunk_height = height
         window = Window.from_slices((0, chunk_height), (c*chunk_width, (c+1)*chunk_width))
-        windows.append(window)
-
-        transform = dataset.transform
+        transform = dataset.window_transform(window)
         crs = dataset.crs
         print(f"Reading {pnv_path}")
         pnv_ = dataset.read(1, window = window)
@@ -42,21 +43,15 @@ for c in range(int(chunks / num_d)):
         dataset = None
     pnv_open_ls = np.where(np.isin(pnv_, np.array(open_ls)), pnv_, 0)
     del pnv_
-
     with rasterio.open(cur_path) as dataset:
-        transform = dataset.transform
-        crs = dataset.crs
         print(f"Reading {cur_path}")
         cur_ = dataset.read(1, window = window)
         dataset.close()
         dataset = None
     cur_past = np.where(cur_ == 1402, 1402, 0).astype(bool)
     del cur_
-
     with rasterio.open(cattl_path) as dataset:
         print(f"Reading {cattl_path}")
-        transform = dataset.transform
-        crs = dataset.crs
         cattl_ = dataset.read(1, window = window)
         cattl_[cattl_ < 0] = 0
         dataset.close()
@@ -71,7 +66,6 @@ for c in range(int(chunks / num_d)):
     print(np.count_nonzero(ext_past), np.count_nonzero(cur_past))
 
     chunk_file = os.path.join(t_out_folder, f'chunk_{c}.tif')
-
     with rasterio.open(
         chunk_file, "w", driver="GTiff", 
         height=ext_past.shape[0], width=ext_past.shape[1], 

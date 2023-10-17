@@ -28,17 +28,20 @@ out_meta.update({"driver": "GTiff",
                  "width": mosaic.shape[2],
                  "transform": out_trans})
 
+# with rasterio.open(out_path, 'w', **out_meta) as dest:
+#     reproject(
+#         source= mosaic,
+#         destination=rasterio.band(dest, 1),
+#         src_transform=mosaic.transform,
+#         src_crs=mosaic.crs,
+#         dst_transform=out_trans,
+#         dst_crs=dst_crs,
+#         width=width,
+#         height=height,
+#         resampling=Resampling.nearest,
+#     )
 with rasterio.open(out_path, 'w', **out_meta) as dest:
-    reproject(
-        source=rasterio.band(mosaic, 1),
-        destination=rasterio.band(dest, 1),
-        src_transform=mosaic.transform,
-        src_crs=mosaic.crs,
-        dst_transform=out_trans,
-        dst_crs=dst_crs,
-        width=width,
-        height=height
-    )
+    dest.write(mosaic)
 
 for src in src_files_to_mosaic:
     src.close()
