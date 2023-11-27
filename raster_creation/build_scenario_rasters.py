@@ -26,5 +26,5 @@ def build_n_save(r_list, output_path):
         calc = result.numpy_apply(add_to_stack, raster)
         calc.save(result)
 
-build_n_save(raster_path_list_f_gh, output_path_f_gh)
+# build_n_save(raster_path_list_f_gh, output_path_f_gh)
 build_n_save(raster_path_list_f_pnv, output_path_f_pnv)

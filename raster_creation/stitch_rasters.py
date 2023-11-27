@@ -6,7 +6,6 @@ import os
 
 target_dir = "rasters/open_past_/pasture_exc_parts"
 out_path = "rasters/open_past_/pasture_exc_400752_200376.tif"
-
 dst_crs = 'EPSG:4326'
 width, height = 400752, 200376
 
@@ -28,18 +27,6 @@ out_meta.update({"driver": "GTiff",
                  "width": mosaic.shape[2],
                  "transform": transform})
 
-# with rasterio.open(out_path, 'w', **out_meta) as dest:
-#     reproject(
-#         source= mosaic,
-#         destination=rasterio.band(dest, 1),
-#         src_transform=mosaic.transform,
-#         src_crs=mosaic.crs,
-#         dst_transform=out_trans,
-#         dst_crs=dst_crs,
-#         width=width,
-#         height=height,
-#         resampling=Resampling.nearest,
-#     )
 with rasterio.open(out_path, 'w', **out_meta) as dest:
     dest.write(mosaic)
 

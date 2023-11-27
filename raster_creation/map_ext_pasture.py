@@ -6,9 +6,7 @@ import sys
 
 pnv_path = "/maps/tsb42/bd_opp_cost/v2/raster_creation/rasters/jung_processed/pnv_lvl1_004_93m_400752_200376.tif"
 cur_path = "/maps/tsb42/bd_opp_cost/v2/raster_creation/inputs/JUNG/iucn_habitatclassification_composite_lvl2_ver004.tif"
-
 t_out_folder = "rasters/open_past_/past_exc_parts"
-
 cattl_path = "rasters/open_past_/cattle_400752_200376.tif"
 
 # where jungPNV is open habitat AND jungCurr is pasture OR stocking density < 0.1 / ha, 

@@ -24,7 +24,7 @@ import rasterio
 
 quiet = True
 overwrite = True
-exponent = 0.25 
+exponent = 0.25
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--current_path',

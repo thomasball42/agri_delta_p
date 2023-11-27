@@ -10,12 +10,10 @@ import os
 import argparse
 import pandas as pd
 
-classes = [
-            "bow", 
+classes = ["bow", 
            "mammals", 
            "amphibians", 
            "reptiles"]
-# season = "RESIDENT"
 habmaps = {"historic"   : "hist",
            "scenario"   : "noag_f_pnv",
            "current"    : "noag_f_gh"

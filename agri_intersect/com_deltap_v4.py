@@ -19,16 +19,17 @@ gh_path = "inputs/gaez_hyde_10k.tif"
 output_path = "outputs"
 outfile = os.path.split(crop_tgt_dir)[-1].split(".")[0] + "country_opp_cost_v2" + ".csv"
 
-livestock_paths = {"bvmeat" : "inputs/livestock/warped/bvmeat_proportion_grazing.tif",
-                   "bvmilk" : "inputs/livestock/warped/bvmilk_proportion_grazing.tif",
-                   "sgmeat" : "inputs/livestock/warped/sgmeat_proportion_grazing.tif",
-                #    "bvmeat" : "inputs/livestock/GLW4/Cattle.tif",
-                #    "bvmilk" : "inputs/livestock/GLW4/Cattle.tif",
-                #    "sgmeat" : "inputs/livestock/GLW4/Sheep.tif",
-                   "chickens"   : "inputs/livestock/GLW4/ch/5_Ch_2015_Da.tif",
-                   "ducks"      : "inputs/livestock/GLW4/du/5_Dk_2015_Da.tif",
-                   "pigs"       : "inputs/livestock/GLW4/pi/5_Pg_2015_Da.tif",
-                   }
+livestock_paths = {
+                # "bvmeat" : "inputs/livestock/warped/bvmeat_proportion_grazing.tif",
+                # "bvmilk" : "inputs/livestock/warped/bvmilk_proportion_grazing.tif",
+                # "sgmeat" : "inputs/livestock/warped/sgmeat_proportion_grazing.tif",
+                "bvmeat" : "inputs/livestock/GLW4/Cattle.tif",
+                "bvmilk" : "inputs/livestock/GLW4/Cattle.tif",
+                "sgmeat" : "inputs/livestock/GLW4/Sheep.tif",
+                "chickens"   : "inputs/livestock/GLW4/ch/5_Ch_2015_Da.tif",
+                "ducks"      : "inputs/livestock/GLW4/du/5_Dk_2015_Da.tif",
+                "pigs"       : "inputs/livestock/GLW4/pi/5_Pg_2015_Da.tif",
+                }
 
 nperrs = np.seterr(all='ignore')
 
@@ -90,12 +91,12 @@ country_rasts = rasterize(
     ((geom, value) for geom, value in zip(countries.geometry, countries.index)),
     out_shape=(dataset.height, dataset.width),
     transform=transform,
+    all_touched=True,
     dtype=int,
     fill=0
 )
 
 # Create output df
-
 if os.path.isfile(os.path.join(output_path, outfile)) and overwrite == False:
     df = pd.read_csv(os.path.join(output_path, outfile), index_col = 0)
 else:
