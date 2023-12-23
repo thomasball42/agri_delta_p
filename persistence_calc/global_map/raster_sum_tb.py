@@ -22,7 +22,6 @@ for path, subdirs, files in os.walk(target_dir):
     for name in files:
         f.append(os.path.join(path, name))
 f = [file for file in f if ".tif" in file]
-# f = [file for file in f if "RESIDENT" in file]
 
 for fx, file in enumerate(f):
     rast = rasterio.open(file)
