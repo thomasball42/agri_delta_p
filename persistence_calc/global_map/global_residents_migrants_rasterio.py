@@ -22,6 +22,8 @@ import os
 import warnings
 import rasterio
 
+gt_1_sp_path = "sp_gt1.csv"
+
 quiet = True
 overwrite = True
 exponent = 0.25
@@ -77,9 +79,19 @@ def harmonise(rasters):
         arrays[i][offsets_y[i]:offsets_y[i]+data.shape[0], offsets_x[i]:offsets_x[i]+data.shape[1]] = data
     return arrays, transform, shape, crs, window
 
-def global_p_calc(current_AOH,historic_AOH, exponent):
+def global_p_calc(current_AOH, historic_AOH, exponent):
+    if historic_AOH < current_AOH:
+        hdf = pd.read_csv(args["hist_table"])
+        taxid = os.path.split(args["current_path"])[-1].split("-")[-1].split(".")[0]
+        seas = os.path.split(args["current_path"])[-1].split("-")[0].split(".")[-1].lower().strip(" ")
+        tdf = pd.DataFrame({"taxid": [taxid], "season":[seas], 
+                            "current_AOH":[current_AOH],
+                            "historic_AOH":[historic_AOH]})
+        with open(gt_1_sp_path, "a") as myfile:
+            myfile.write(f"{taxid},{seas},{current_AOH},{historic_AOH}\n")
     sp_P = (current_AOH / historic_AOH)**exponent
     sp_P_fix = np.where(sp_P > 1, 1, sp_P)
+    
     return sp_P_fix 
 
 sillygoofyrenamingfunction = lambda fname: fname.split(".")[0] + ".BREEDING-" + fname.split("-")[-1]

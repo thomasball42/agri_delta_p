@@ -1,93 +1,101 @@
-"""assumes experiments in config.json are set up correctly"""
-
-import subprocess
+from math import ceil, floor
+import sys
 import os
-import argparse
 
-python_path = "/maps/tsb42/bd_opp_cost/v3/persistence_calc/env/bin/python3.10"
-vt316 = "persistence-calculator/vt316generator.py"
-aohcalc = "persistence-calculator/aohcalc.py"
-spList = "--list canonical_spList.csv"
+import numpy as np
+from yirgacheffe.layers import RasterLayer, PixelScale
 
-parser = argparse.ArgumentParser(description="Runs vt314generator.py and places results in structured folders")
-parser.add_argument(
-        '--classes',
-        type=str,
-        help="Comma sep, no spaces, options are 'mammals','reptiles','amphibians','bow', for example: 'mammals,reptiles'.",
-        required=True,
-        dest="classes"
-    )
-parser.add_argument(
-        '--hmaps',
-        type=str,
-        help="Comma sep, no spaces, options are 'pnv_curr','gh_curr', 'hist'",
-        required=True,
-        dest="hmaps"
-    )
-parser.add_argument(
-        '--outputf',
-        type=str,
-        help="",
-        required=True,
-        dest="outputf"
-    )
-parser.add_argument(
-        '--suffix',
-        type=str,
-        help="",
-        required=True,
-        dest="suffix"
-    )
-parser.add_argument(
-        '--parts',
-        type=str,
-        help="'one', 'two', or 'both'",
-        required=True,
-        dest="parts"
-    )
+from osgeo import gdal
 
-args = vars(parser.parse_args())
-c = args['classes']
-c = c.split(",")
+gdal.SetCacheMax(1024 * 1024 * 16)
 
-cdict = {"mammals"      :"MAMMALIA",
-         "reptiles"     :"REPTILIA",
-         "amphibians"   :"AMPHIBIA",
-         "bow"          :"AVES"
-        }
+overwrite = False
+target_scale = PixelScale(0.083333333333333, -0.083333333333333)
+quiet = False
 
-hmaps = args['hmaps']
-hmaps = hmaps.split(",")
+try:
+    source = RasterLayer.layer_from_file(sys.argv[1])
+    target_name = sys.argv[2]  # pylint: disable=C0103
+except IndexError:
+    print(f"Usage: {sys.argv[0]} [SRC] [DEST]", file=sys.stderr)
+    sys.exit(1)
 
-outputf = args['outputf']
-suff = args['suffix']
+if os.path.isfile(target_name) and overwrite == False:
+    if quiet:
+        qmsg = ""
+    else:
+        qmsg = f"Output file exists ({sys.argv[2]}), skipping.."
+    quit(qmsg)
 
-if args['parts'] == "one" or args['parts'] == "both":
-    for dc in c:
-        for h in hmaps:
-            exp_name = f"{dc}_{h}{suff}"
-            epath = os.path.join(outputf,exp_name)
-            if os.path.isdir(os.path.join(epath,"aoh_rasters")) == False:
-                print(f"Making dirs for aoh results...")
-                os.makedirs(os.path.join(epath, "aoh_rasters"), exist_ok=True)
-            experiment = f"--experiment {exp_name}"
-            epochs = f"--epochs {exp_name}"
-            output = f"--output {os.path.join(epath, 'taxa.csv')}"
-            class_str = f"--class {cdict[dc]}"
-            pstr = f"{python_path} {vt316} {experiment} {spList} {epochs} {output} {class_str}"
-            print(f"Running {pstr}...")
-            process = subprocess.Popen(pstr, shell=True, stdout=subprocess.PIPE)
-            process.wait()
+target = RasterLayer.empty_raster_layer(
+    area=source.area,
+    scale=target_scale,
+    datatype=source.datatype,
+    filename=target_name,
+    projection=source.projection
+)
 
-if args['parts'] == "two" or args['parts'] == "both":
-    for dc in c:
-        for h in hmaps:
-            exp_name = f"{dc}_{h}{suff}"
-            epath = os.path.join(outputf,exp_name)
-            taxa = os.path.join(epath, 'taxa.csv')
-            geotiffs = f"--geotiffs {os.path.join(epath,'aoh_rasters')}"
-            o = f"-o {os.path.join(epath,'aoh.csv')}"
-            pstr = f"littlejohn -j 30 -c {taxa} {o} {python_path} {aohcalc} {geotiffs} --config config.json"
-            print(f"Running {pstr}...")
-            process = subprocess.Popen(pstr, shell = True) 
-            process.wait()
+pixels_per_x = source.window.xsize / target.window.xsize
+pixels_per_y = source.window.ysize / target.window.ysize
+
+for y in range(target.window.ysize):
+    # read all the pixels that will overlap with this row from source
+    low_y = floor(y * pixels_per_y)
+    high_y = ceil((y+1) * pixels_per_y)
+
+    band_height = high_y - low_y
+    band = source.read_array(0, low_y, source.window.xsize, high_y - low_y)
+
+    dest = np.zeros((1, target.window.xsize))
+    
+    for x in range(target.window.xsize):
+
+        low_x = floor(x * pixels_per_x)
+        high_x = ceil((x+1) * pixels_per_x)
+
+        def calc_total(low_x, high_x):
+            
+            total = np.sum(band[1:band_height - 1, low_x+1:high_x - 1])
+
+            # Work out the scaling factors for the sides
+            first_y = float(low_y + 1) - (y * pixels_per_y)
+            assert 0.0 <= first_y <= 1.0
+            last_y = ((y + 1) * pixels_per_y) - float(high_y - 1)
+            assert 0.0 <= last_y <= 1.0
+            first_x = float(low_x + 1) - (x * pixels_per_x)
+            assert 0.0 <= first_x <= 1.0
+            try:
+                last_x = ((x + 1) * pixels_per_x) - float(high_x - 1)
+                assert 0.0 <= last_x <= 1.0
+            except AssertionError:
+                last_x = 1
+                assert 0.0 <= last_x <= 1.0
+
+            # major sides
+            total += np.sum(band[1:band_height - 1, low_x:low_x+1]) * first_y
+            total += np.sum(band[1:band_height - 1, high_x - 2:high_x - 1]) * last_y
+            total += np.sum(band[0][low_x+1:high_x - 1]) * first_x
+            total += np.sum(band[band_height - 1][low_x + 1:high_x - 1]) * last_x
+
+            # corners
+            total += band[0][low_x] * first_x * first_y
+            total += band[band_height - 1][low_x] * first_x * last_y
+            total += band[0][high_x - 1] * last_x * first_y
+            total += band[band_height - 1][high_x - 1] * last_x * last_y
+            return total
+        
+        try: 
+            total = calc_total(low_x, high_x)
+        except IndexError:
+            total = calc_total(low_x, floor((x+1) * pixels_per_x))
+
+        dest[0][x] = total
+
+    target._dataset.GetRasterBand(1).WriteArray(dest, 0, y) # pylint: disable=W0212
+
+before = source.sum()
+after = target.sum()
+
+print(f"before: {before}")
+print(f"after:  {after}")
+print(f"diff:  {((after - before)/before) * 100.0}") 

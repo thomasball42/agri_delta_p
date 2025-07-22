@@ -1,0 +1,105 @@
+{
+    "iucn": {
+        "api_key": "09c92a69354a8fafe983ab2ff5bf80461647ac0a62831f531047a12d506bc116"
+    },
+    "experiments": {
+        "mammals_noag_f_gh" : {
+            "translator"    : "jung",
+            "habitat"       : "/maps/tsb42/bd_opp_cost/v4/raster_creation/rasters/current_/noagri_fill_gh_400752_200376.tif",
+            "elevation"     : "/maps/tsb42/bd_opp_cost/v3/elevation_modlib_dem_merge_warped.tif",
+            "area"          : "/maps-priv/maps/biodiversity/jung_aoh_basemaps/small_jung.tif",
+            "range"         : "/maps-priv/maps/biodiversity/aoh_trial/mammals_terrestrial_filtered_collected_fix.gpkg",
+            "iucn_batch"    : "/maps-priv/maps/ae491/inputs/IUCN/IUCN_info_all_taxa"
+        },
+        "mammals_noag_f_pnv" : {
+            "translator"    : "jung",
+            "habitat"       : "/maps/tsb42/bd_opp_cost/v4/raster_creation/rasters/restored_/noagri_fill_pnv_400752_200376.tif",
+            "elevation"     : "/maps/tsb42/bd_opp_cost/v3/elevation_modlib_dem_merge_warped.tif",
+            "area"          : "/maps-priv/maps/biodiversity/jung_aoh_basemaps/small_jung.tif",
+            "range"         : "/maps-priv/maps/biodiversity/aoh_trial/mammals_terrestrial_filtered_collected_fix.gpkg",
+            "iucn_batch"    : "/maps-priv/maps/ae491/inputs/IUCN/IUCN_info_all_taxa"
+        },
+        "mammals_hist" : {
+            "translator"    : "jung",
+            "habitat"       : "/maps/biodiversity/PNV_trial/PNV_nsfix/PNV_merge.tifModLibPNV-0000000000-0000000000.tif",
+            "elevation"     : "/maps/tsb42/bd_opp_cost/v3/elevation_modlib_dem_merge_warped.tif",
+            "area"          : "/maps-priv/maps/biodiversity/jung_aoh_basemaps/small_jung.tif",
+            "range"         : "/maps-priv/maps/biodiversity/IUCN_polygons_102022/historic_mammal_collected.gpkg",
+            "iucn_batch"    : "/maps-priv/maps/ae491/inputs/IUCN/IUCN_info_all_taxa"
+        },
+
+        "reptiles_noag_f_gh" : {
+            "translator"    : "jung",
+            "habitat"       : "/maps/tsb42/bd_opp_cost/v4/raster_creation/rasters/current_/noagri_fill_gh_400752_200376.tif",
+            "elevation"     : "/maps/tsb42/bd_opp_cost/v3/elevation_modlib_dem_merge_warped.tif",
+            "area"          : "/maps-priv/maps/biodiversity/jung_aoh_basemaps/small_jung.tif",
+            "range"         : "/maps/ae491/inputs/IUCN/polygons/reptiles_filtered_collected_season.gpkg",
+            "iucn_batch"    : "/maps-priv/maps/ae491/inputs/IUCN/IUCN_info_all_taxa"
+        },
+        "reptiles_noag_f_pnv" : {
+            "translator"    : "jung",
+            "habitat"       : "/maps/tsb42/bd_opp_cost/v4/raster_creation/rasters/restored_/noagri_fill_pnv_400752_200376.tif",
+            "elevation"     : "/maps/tsb42/bd_opp_cost/v3/elevation_modlib_dem_merge_warped.tif",
+            "area"          : "/maps-priv/maps/biodiversity/jung_aoh_basemaps/small_jung.tif",
+            "range"         : "/maps/ae491/inputs/IUCN/polygons/reptiles_filtered_collected_season.gpkg",
+            "iucn_batch"    : "/maps-priv/maps/ae491/inputs/IUCN/IUCN_info_all_taxa"
+        },
+        "reptiles_hist" : {
+            "translator"    : "jung",
+            "habitat"       : "/maps/biodiversity/PNV_trial/PNV_nsfix/PNV_merge.tifModLibPNV-0000000000-0000000000.tif",
+            "elevation"     : "/maps/tsb42/bd_opp_cost/v3/elevation_modlib_dem_merge_warped.tif",
+            "area"          : "/maps-priv/maps/biodiversity/jung_aoh_basemaps/small_jung.tif",
+            "range"         : "/maps/ae491/inputs/IUCN/polygons/reptiles_extinct.gpkg",
+            "iucn_batch"    : "/maps-priv/maps/ae491/inputs/IUCN/IUCN_info_all_taxa"
+        },
+        "amphibians_noag_f_gh" : {
+            "translator"    : "jung",
+            "habitat"       : "/maps/tsb42/bd_opp_cost/v4/raster_creation/rasters/current_/noagri_fill_gh_400752_200376.tif",
+            "elevation"     : "/maps/tsb42/bd_opp_cost/v3/elevation_modlib_dem_merge_warped.tif",
+            "area"          : "/maps-priv/maps/biodiversity/jung_aoh_basemaps/small_jung.tif",
+            "range"         : "/maps/ae491/inputs/IUCN/polygons/amphibians_filtered_collected_season.gpkg",
+            "iucn_batch"    : "/maps-priv/maps/ae491/inputs/IUCN/IUCN_info_all_taxa"
+        },
+        "amphibians_noag_f_pnv" : {
+            "translator"    : "jung",
+            "habitat"       : "/maps/tsb42/bd_opp_cost/v4/raster_creation/rasters/restored_/noagri_fill_pnv_400752_200376.tif",
+            "elevation"     : "/maps/tsb42/bd_opp_cost/v3/elevation_modlib_dem_merge_warped.tif",
+            "area"          : "/maps-priv/maps/biodiversity/jung_aoh_basemaps/small_jung.tif",
+            "range"         : "/maps/ae491/inputs/IUCN/polygons/amphibians_filtered_collected_season.gpkg",
+            "iucn_batch"    : "/maps-priv/maps/ae491/inputs/IUCN/IUCN_info_all_taxa"
+        },
+        "amphibians_hist" : {
+            "translator"    : "jung",
+            "habitat"       : "/maps/biodiversity/PNV_trial/PNV_nsfix/PNV_merge.tifModLibPNV-0000000000-0000000000.tif",
+            "elevation"     : "/maps/tsb42/bd_opp_cost/v3/elevation_modlib_dem_merge_warped.tif",
+            "area"          : "/maps-priv/maps/biodiversity/jung_aoh_basemaps/small_jung.tif",
+            "range"         : "/maps/ae491/inputs/IUCN/polygons/amphibians_extinct.gpkg",
+            "iucn_batch"    : "/maps-priv/maps/ae491/inputs/IUCN/IUCN_info_all_taxa"
+        },
+
+        "bow_noag_f_gh" : {
+            "translator"    : "jung",
+            "habitat"       : "/maps/tsb42/bd_opp_cost/v4/raster_creation/rasters/current_/noagri_fill_gh_400752_200376.tif",
+            "elevation"     : "/maps/tsb42/bd_opp_cost/v3/elevation_modlib_dem_merge_warped.tif",
+            "area"          : "/maps-priv/maps/biodiversity/jung_aoh_basemaps/small_jung.tif",
+            "range"         : "/maps/ae491/inputs/IUCN/polygons/bow_filtered_collected_season.gpkg",
+            "iucn_batch"    : "/maps-priv/maps/ae491/inputs/IUCN/IUCN_info_all_taxa"
+        },
+        "bow_noag_f_pnv" : {
+            "translator"    : "jung",
+            "habitat"       : "/maps/tsb42/bd_opp_cost/v4/raster_creation/rasters/restored_/noagri_fill_pnv_400752_200376.tif",
+            "elevation"     : "/maps/tsb42/bd_opp_cost/v3/elevation_modlib_dem_merge_warped.tif",
+            "area"          : "/maps-priv/maps/biodiversity/jung_aoh_basemaps/small_jung.tif",
+            "range"         : "/maps/ae491/inputs/IUCN/polygons/bow_filtered_collected_season.gpkg",
+            "iucn_batch"    : "/maps-priv/maps/ae491/inputs/IUCN/IUCN_info_all_taxa"
+        },
+        "bow_hist" : {
+            "translator"    : "jung",
+            "habitat"       : "/maps/biodiversity/PNV_trial/PNV_nsfix/PNV_merge.tifModLibPNV-0000000000-0000000000.tif",
+            "elevation"     : "/maps/tsb42/bd_opp_cost/v3/elevation_modlib_dem_merge_warped.tif",
+            "area"          : "/maps-priv/maps/biodiversity/jung_aoh_basemaps/small_jung.tif",
+            "range"         : "/maps/ae491/inputs/IUCN/polygons/bow_extinct.gpkg",
+            "iucn_batch"    : "/maps-priv/maps/ae491/inputs/IUCN/IUCN_info_all_taxa"
+        }
+    }
+}

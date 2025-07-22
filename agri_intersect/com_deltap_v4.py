@@ -9,7 +9,7 @@ import geopandas as gpd
 from rasterio.features import rasterize
 from rasterio.transform import from_bounds
 
-overwrite = False
+overwrite = True
 
 data_raster = "inputs/deltap_all_species.tif"
 crop_tgt_dir = "inputs/crops/har/"
@@ -17,7 +17,43 @@ anim_tgt_dir = "inputs"
 gh_path = "inputs/gaez_hyde_10k.tif"
 
 output_path = "outputs"
-outfile = os.path.split(crop_tgt_dir)[-1].split(".")[0] + "country_opp_cost_v2" + ".csv"
+outfile = os.path.split(crop_tgt_dir)[-1].split(".")[0] + "country_opp_cost_v6" + ".csv"
+
+def weighted_quantile(values, quantiles, sample_weight=None, 
+                      values_sorted=False, old_style=False):
+    """ Very close to numpy.percentile, but supports weights.
+    NOTE: quantiles should be in [0, 1]!
+    :param values: numpy.array with data
+    :param quantiles: array-like with many quantiles needed
+    :param sample_weight: array-like of the same length as `array`
+    :param values_sorted: bool, if True, then will avoid sorting of
+        initial array
+    :param old_style: if True, will correct output to be consistent
+        with numpy.percentile.
+    :return: numpy.array with computed quantiles.
+    """
+    values = np.array(values)
+    quantiles = np.array(quantiles)
+    if sample_weight is None:
+        sample_weight = np.ones(len(values))
+    sample_weight = np.array(sample_weight)
+    assert np.all(quantiles >= 0) and np.all(quantiles <= 1), \
+        'quantiles should be in [0, 1]'
+
+    if not values_sorted:
+        sorter = np.argsort(values)
+        values = values[sorter]
+        sample_weight = sample_weight[sorter]
+
+    weighted_quantiles = np.cumsum(sample_weight) - 0.5 * sample_weight
+    
+    if old_style:
+        # To be convenient with numpy.percentile
+        weighted_quantiles -= weighted_quantiles[0]
+        weighted_quantiles /= weighted_quantiles[-1]
+    else:
+        weighted_quantiles /= np.sum(sample_weight)
+    return np.interp(quantiles, weighted_quantiles, values)
 
 livestock_paths = {
                 # "bvmeat" : "inputs/livestock/warped/bvmeat_proportion_grazing.tif",
@@ -74,6 +110,7 @@ def weighted_mean_err(countries, weight_vals, indata):
             # dsmasked = dsmasked / dsmasked.sum()
             weighted_arith_mean = (wnorm * dsmasked).sum() / wnorm.sum()
             arith_stderr = np.var(dsmasked) * np.sqrt((wnorm ** 2).sum())
+            
             arr_means.append(weighted_arith_mean)
             arr_errs.append(arith_stderr)
     return arr_means, arr_errs
@@ -84,6 +121,9 @@ ds_values = np.divide(ds_values.T, pixel_areas_km2).T
 # Load country boundaries shapefile
 shapefile = os.path.join("inputs", "vectors", "natural_earth_vector.gpkg")
 countries = gpd.read_file(shapefile, layer = "ne_50m_admin_0_countries")
+countries.loc[countries.SOVEREIGNT=="Norway", "ISO_A3"] = "NOR"
+countries.loc[(countries.SOVEREIGNT=="France")&(countries.ISO_A3=="-99"), "ISO_A3"] = "FRA"
+
 
 # Rasterize country boundaries to match geotiff grid
 transform = from_bounds(*dataset.bounds, dataset.width, dataset.height)
@@ -121,7 +161,7 @@ for ix, infile in enumerate(f):
         crop_values = rasterio.open(geotiff_file).read(1)
 
         # Calculate mean value within each country
-        mean_values, errs = weighted_mean_err(countries, crop_values, np.divide(ds_values, c))
+        mean_values, errs = weighted_mean_err(countries, crop_values, np.divide(ds_values, gh_a))
         dfx = pd.DataFrame({'Country': countries['ISO_A3'], 'val': mean_values, 'err': errs})
         for row in dfx.iterrows():
             row = row[1]
@@ -144,20 +184,20 @@ for lx, lskey in enumerate(livestock_paths.keys()):
         
 # Do overall crops
 # Calculate mean value within each country
-means, errs = weighted_mean_err(countries, c, ds_values)
+means, errs = weighted_mean_err(countries, c, np.divide(ds_values, gh_a))
 dfx = pd.DataFrame({'Country': countries['ISO_A3'], 'val': means, 'err': errs})
 for row in dfx.iterrows():
     row = row[1]
     df.loc[row.Country, "crop"] = row.val
     df.loc[row.Country, f"crop_err"] = row.err
 # Do overall pasture
-means, errs = weighted_mean_err(countries, p, ds_values)
+means, errs = weighted_mean_err(countries, p, np.divide(ds_values, gh_a))
 dfx = pd.DataFrame({'Country': countries['ISO_A3'], 'val': means, 'err': errs})
 for row in dfx.iterrows():
     row = row[1]
     df.loc[row.Country, "past"] = row.val
     df.loc[row.Country, f"past_err"] = row.err
-means, errs = weighted_mean_err(countries, gh_a, ds_values / gh_a)
+means, errs = weighted_mean_err(countries, gh_a, np.divide(ds_values, gh_a))
 dfx = pd.DataFrame({'Country': countries['ISO_A3'], 'val': means, 'err': errs})
 for row in dfx.iterrows():
     row = row[1]

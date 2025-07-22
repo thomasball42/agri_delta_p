@@ -4,7 +4,7 @@ import pandas as pd
 import os
 
 data_path = "../persistence_calc/"
-output_csv = "outputs/global_agri_aoh.csv"
+output_csv = "outputs/global_agri_aoh_2.csv"
 input_list = "file_index_aoh_results_5arc.csv" 
 hist_csv = "/maps/results/global_analysis/processed/PNV_AOH.csv"
 overwrite = False
