@@ -4,6 +4,7 @@
 *.xml
 *.zip
 */inputs/
+global_analysis/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
